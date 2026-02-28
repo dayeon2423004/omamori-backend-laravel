@@ -17,14 +17,11 @@ class OmamoriElementResource extends JsonResource
             $assetKey = $props['asset_key'] ?? null;
 
             if ($assetKey) {
-                $disk = Storage::disk('public');
-                $path = "stamps/{$assetKey}.png";
-
-                if ($disk->exists($path)) {
-                    $stampUrl = Storage::url($path);   
-                    $props['url'] = $stampUrl;      
-                }
-            }
+                $path = "assets/stamps/{$assetKey}.png";
+                $stampUrl = asset($path);
+        
+                $props['url'] = $stampUrl;
+            }    
         }
 
         return [
