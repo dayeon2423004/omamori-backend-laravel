@@ -56,7 +56,7 @@ class Frame extends Model
             return null;
         }
 
-        return Storage::url($this->preview_path);
+        return asset('assets/' . $this->preview_path);
     }
 
     public function assetFile()
