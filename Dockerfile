@@ -19,4 +19,7 @@ RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 # 권한 설정
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
+
 EXPOSE 8000
+
+CMD ["sh", "-c", "php artisan config:clear && php artisan cache:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan serve --host=0.0.0.0 --port=8000"]
