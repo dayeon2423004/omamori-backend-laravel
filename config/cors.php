@@ -7,6 +7,7 @@ return [
 
     'allowed_origins' => [
         'https://omamori-frontend-react.vercel.app',
+        'https://omamori-frontend-react-pudabk9dq-dayeon2423004s-projects.vercel.app',
         'http://localhost:3000',
         'http://localhost:5173',
     ],
