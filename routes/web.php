@@ -6,14 +6,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/frame-image/{filename}', function ($filename) {
-    $path = public_path('assets/frames/' . $filename);
+Route::get('/file/{path}', function ($path) {
+    $fullPath = public_path('assets/' . $path);
 
-    if (!file_exists($path)) {
+    if (!file_exists($fullPath)) {
         abort(404);
     }
 
-    return response()->file($path, [
+    return response()->file($fullPath, [
         'Access-Control-Allow-Origin' => '*',
     ]);
-});
+})->where('path', '.*');
