@@ -56,7 +56,7 @@ class Frame extends Model
             return null;
         }
 
-        return asset('assets/' . $this->preview_path);
+        return url('/api/frame-image/' . basename($this->preview_path));
     }
 
     public function assetFile()
