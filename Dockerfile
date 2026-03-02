@@ -15,10 +15,8 @@ COPY . .
 
 # 의존성 설치 (플랫폼 체크 무시 옵션 추가)
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
-
+RUN chmod -R 775 storage bootstrap/cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-RUN php artisan config:clear
-RUN php artisan cache:clear
 
 EXPOSE 8000
 CMD php artisan serve --host=0.0.0.0 --port=8000
