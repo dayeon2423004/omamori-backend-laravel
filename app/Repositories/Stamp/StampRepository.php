@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Repositories\Stamp;
 
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Facades\File;
 
 class StampRepository
 {
@@ -15,44 +15,56 @@ class StampRepository
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
-        /** @var FilesystemAdapter $disk */
-        $disk = Storage::disk('public');
+        $dirPath = public_path('assets/stamps');
 
-        $dir  = 'stamps'; 
+        // 폴더 없으면 빈 paginator 반환
+        if (!File::exists($dirPath)) {
+            return new LengthAwarePaginator([], 0, 1, 1);
+        }
+
         $q    = isset($filters['q']) ? (string) $filters['q'] : null;
         $ext  = strtolower((string)($filters['ext'] ?? 'png'));
         $sort = (string)($filters['sort'] ?? 'name');
         $page = max(1, (int)($filters['page'] ?? 1));
         $size = max(1, min(100, (int)($filters['size'] ?? 24)));
 
-        $paths = array_values(array_filter(
-            $disk->files($dir),
-            fn (string $path) => strtolower(pathinfo($path, PATHINFO_EXTENSION)) === $ext
-        ));
+        // 파일 목록 가져오기
+        $files = collect(File::files($dirPath));
 
+        // 확장자 필터
+        $files = $files->filter(function ($file) use ($ext) {
+            return strtolower($file->getExtension()) === $ext;
+        });
+
+        // 검색 필터
         if ($q !== null && $q !== '') {
-            $paths = array_values(array_filter($paths, function (string $path) use ($q): bool {
-                return mb_stripos(pathinfo($path, PATHINFO_FILENAME), $q) !== false;
-            }));
+            $files = $files->filter(function ($file) use ($q) {
+                return mb_stripos($file->getFilenameWithoutExtension(), $q) !== false;
+            });
         }
 
+        // 정렬
         if ($sort === 'latest') {
-            usort($paths, fn (string $a, string $b): int => $disk->lastModified($b) <=> $disk->lastModified($a));
+            $files = $files->sortByDesc(fn ($file) => $file->getMTime());
         } else {
-            usort($paths, fn (string $a, string $b): int => strcmp(
-                pathinfo($a, PATHINFO_FILENAME),
-                pathinfo($b, PATHINFO_FILENAME)
-            ));
+            $files = $files->sortBy(fn ($file) => $file->getFilenameWithoutExtension());
         }
 
-        $total = count($paths);
-        $slice = array_slice($paths, ($page - 1) * $size, $size);
+        $files = $files->values();
 
-        $items = array_map(fn (string $path) => [
-            'asset_key' => pathinfo($path, PATHINFO_FILENAME),
-            'file_name' => pathinfo($path, PATHINFO_BASENAME),
-            'url' => url('/file/' . $path),
-        ], $slice);
+        $total = $files->count();
+
+        $slice = $files->slice(($page - 1) * $size, $size);
+
+        $items = $slice->map(function ($file) {
+            $relativePath = 'stamps/' . $file->getFilename();
+
+            return [
+                'asset_key' => $file->getFilenameWithoutExtension(),
+                'file_name' => $file->getFilename(),
+                'url'       => url('/file/' . $relativePath),
+            ];
+        })->values()->toArray();
 
         return new LengthAwarePaginator(
             $items,
