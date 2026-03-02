@@ -51,7 +51,7 @@ class StampRepository
         $items = array_map(fn (string $path) => [
             'asset_key' => pathinfo($path, PATHINFO_FILENAME),
             'file_name' => pathinfo($path, PATHINFO_BASENAME),
-            'url' => $disk->url($path),
+            'url' => url('/file/' . $path),
         ], $slice);
 
         return new LengthAwarePaginator(
